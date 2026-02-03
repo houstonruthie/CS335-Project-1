@@ -20,3 +20,10 @@ ray
 # VS Code
 .vscode/
 
+# Large asset archives
+cubemaps/*.tar
+cubemaps/*.tar.gz
+cubemaps/*.tar.xz
+scenes/*.tar
+scenes/*.tar.gz
+
