@@ -56,7 +56,7 @@ glm::dvec3 specular =
 glm::dvec3 shadow = pLight->shadowAttenuation(r, P);
 
 // Accumulate
-color += shadow * (diffuse + specular);
+color += atten * shadow * (diffuse + specular);
 
 
   }

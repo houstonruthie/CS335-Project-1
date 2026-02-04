@@ -74,69 +74,121 @@ glm::dvec3 RayTracer::tracePixel(int i, int j) {
 // called from here) to handle reflection, refraction, etc etc.
 glm::dvec3 RayTracer::traceRay(ray &r, const glm::dvec3 &thresh, int depth,
                                double &t) {
-  isect i;
-  glm::dvec3 colorC;
+    isect i;
+    glm::dvec3 colorC(0.0);
+
 #if VERBOSE
-  std::cerr << "== current depth: " << depth << std::endl;
+    std::cerr << "== current depth: " << depth << std::endl;
 #endif
 
-  if (scene->intersect(r, i)) {
-    const Material &m = i.getMaterial();
+    if (scene->intersect(r, i)) {
+        const Material &m = i.getMaterial();
 
-    // Local shading (Phong)
-    colorC = m.shade(scene.get(), r, i);
+        // ---- Local Phong shading ----
+        colorC = m.shade(scene.get(), r, i);
 
-    // Stop recursion if depth exceeded
-    if (depth <= 0) {
-        return colorC;
-    }
+        // Stop recursion
+        if (depth <= 0) {
+            return colorC;
+        }
 
-    // Reflection coefficient
-    glm::dvec3 kr = m.kr(i);
-
-    // Only reflect if material is reflective
-    if (kr != glm::dvec3(0.0)) {
         glm::dvec3 P = r.at(i.getT());
         glm::dvec3 N = glm::normalize(i.getN());
         glm::dvec3 D = glm::normalize(r.getDirection());
 
-        glm::dvec3 R = glm::reflect(D, N);
-
         const double eps = 1e-6;
-        ray reflectedRay(
-    P + eps * R,
-    R,
-    glm::dvec3(1.0),
-    ray::REFLECTION
-);
 
+        // ==============================
+        // REFLECTION
+        // ==============================
+        glm::dvec3 kr = m.kr(i);
+        if (kr != glm::dvec3(0.0)) {
+            glm::dvec3 R = glm::reflect(D, N);
 
-        double t_reflect;
-        glm::dvec3 reflectedColor =
-            traceRay(reflectedRay, thresh * kr, depth - 1, t_reflect);
+            ray reflectedRay(
+                P + eps * R,
+                R,
+                glm::dvec3(1.0),
+                ray::REFLECTION
+            );
 
-         colorC += glm::dvec3(1.0, 0.0, 1.0) * 0.3;
-    }
+            double t_reflect;
+            glm::dvec3 reflectedColor =
+                traceRay(reflectedRay, thresh * kr, depth - 1, t_reflect);
 
-  } else {
-    // No intersection. This ray travels to infinity, so we color
-    // it according to the background color, which in this (simple)
-    // case is just black.
-    //
-    // FIXME: Add CubeMap support here.
-    // TIPS: CubeMap object can be fetched from
-    // traceUI->getCubeMap();
-    //       Check traceUI->cubeMap() to see if cubeMap is loaded
-    //       and enabled.
+            colorC += kr * reflectedColor;
+        }
 
-    colorC = glm::dvec3(0.0, 0.0, 0.0);
-  }
+        // ==============================
+        // REFRACTION
+        // ==============================
+        glm::dvec3 kt = m.kt(i);
+        double ior = m.index(i);
+
+        if (kt != glm::dvec3(0.0)) {
+            double cosi = glm::dot(D, N);
+            double etai = 1.0;   // air
+            double etat = ior;
+            glm::dvec3 n = N;
+
+            // Check if ray is inside object
+            if (cosi > 0.0) {
+                std::swap(etai, etat);
+                n = -N;
+            } else {
+                cosi = -cosi;
+            }
+
+            double eta = etai / etat;
+            double k = 1.0 - eta * eta * (1.0 - cosi * cosi);
+
+            // No total internal reflection
+            if (k >= 0.0) {
+                glm::dvec3 T =
+                    eta * D + (eta * cosi - sqrt(k)) * n;
+
+                ray refractedRay(
+                    P + eps * T,
+                    T,
+                    glm::dvec3(1.0),
+                    ray::REFRACTION
+                );
+
+                double t_refract;
+                glm::dvec3 refractedColor =
+                    traceRay(refractedRay, thresh * kt, depth - 1, t_refract);
+
+                colorC += kt * refractedColor;
+            }
+        }
+
 #if VERBOSE
-  std::cerr << "== depth: " << depth + 1 << " done, returning: " << colorC
-            << std::endl;
+        std::cerr << "== depth: " << depth + 1 << " done, returning: "
+                  << colorC << std::endl;
 #endif
-  return colorC;
+        return colorC;
+    } else {
+        // ==================================================
+        // No intersection: ray goes to infinity
+        // ==================================================
+        // FIXME: Add CubeMap support here.
+        // TIPS:
+        //   - CubeMap object can be fetched from:
+        //       traceUI->getCubeMap()
+        //   - Check traceUI->cubeMap() to see if it is enabled
+
+        
+    // DEBUG BACKGROUND (sky gradient)
+    glm::dvec3 D = glm::normalize(r.getDirection());
+    double t = 0.5 * (D.y + 1.0);
+
+    // Blue → white gradient
+    colorC = (1.0 - t) * glm::dvec3(1.0, 1.0, 1.0)
+           + t * glm::dvec3(0.4, 0.7, 1.0);
+
+    }
 }
+
 
 RayTracer::RayTracer()
     : scene(nullptr), buffer(0), thresh(0), buffer_width(0), buffer_height(0),

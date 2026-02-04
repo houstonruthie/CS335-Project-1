@@ -1,12 +1,16 @@
-# build outputs
-**/build/
+# =====================
+# Build outputs
+# =====================
 build/
+**/build/
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
 Makefile
 
-# binaries
+# =====================
+# Binaries / compiled output
+# =====================
 ray
 **/bin/
 *.o
@@ -14,16 +18,21 @@ ray
 *.so
 *.dylib
 
-# macOS
+# =====================
+# macOS junk
+# =====================
 .DS_Store
 
+# =====================
 # VS Code
+# =====================
 .vscode/
 
-# Large asset archives
+# =====================
+# Large asset archives (DO NOT TRACK)
+# =====================
 cubemaps/*.tar
 cubemaps/*.tar.gz
 cubemaps/*.tar.xz
 scenes/*.tar
 scenes/*.tar.gz
-
