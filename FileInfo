@@ -2,17 +2,9 @@ RayTracer.cpp
 trace(x, y)
 This function shoots the primary ray for a pixel. It:
 Clears debug state if debugging is on
-
-
 Constructs a ray through pixel (x, y) using the camera
-
-
 Calls traceRay to actually compute the color
-
-
 Clamps the final color to [0,1]
-
-
 This is basically the entry point for rendering a pixel.
 tracePixel(i, j)
 This converts pixel indices (i, j) into normalized coordinates, calls trace(), and writes the resulting color into the image buffer.
@@ -20,201 +12,94 @@ traceRay(ray &r, thresh, depth, t)
 This is the heart of the ray tracer.
 What it does:
 Checks if the ray intersects anything in the scene
-
-
 If it hits:
-
-
 Stores the intersection distance
-
-
 Calls Material::shade to compute local Phong shading
-
-
 If recursion depth allows:
-
-
 Computes reflection ray using reflect()
-
-
 Computes refraction ray using Snell’s law
-
-
 Recursively traces those rays
-
-
 Accumulates reflection/refraction color contributions
-
-
 If it misses:
-
-
 If cube mapping is enabled, samples the cube map
-
-
 Otherwise returns a background sky gradient
-
 
 Important logic:
 Recursion stops if depth == 0 or color contribution is below threshold
-
-
 Small epsilon offsets are used to avoid self-intersection
-
-
 checkRender / waitRender
 These are placeholders for multithreading support. For single-threaded rendering they simply return immediately.
 aaImage()
 This handles supersampling anti-aliasing:
 Shoots multiple jittered rays per pixel
-
-
 Averages the results
-
-
 Writes the smoothed color back to the buffer
 
-
- material.cpp
+material.cpp
 Material::shade(scene, ray, isect)
 This implements the Phong illumination model.
 Steps:
 Start with ambient term
-
-
 For each light:
-
-
 Compute direction to light
-
-
 Compute diffuse term using max(N·L, 0)
-
-
 Compute specular term using reflected light vector and shininess
-
-
 Construct a shadow ray from the surface point toward the light
-
-
 Call light->shadowAttenuation() to check if light is blocked
-
-
 Apply distance attenuation
-
-
 Accumulate diffuse + specular if not shadowed
-
-
 Important detail:
 Shadow rays are offset by epsilon along the surface normal to avoid hitting the same surface again
-
-
 TextureMap functions
 These are currently stubs returning white. Texture mapping itself is supported via UVs and MaterialParameter, but full bilinear interpolation is a separate step.
- light.cpp
+
+light.cpp
 DirectionalLight::distanceAttenuation
 Always returns 1.0 because directional lights are infinitely far away.
 DirectionalLight::shadowAttenuation
 Constructs a shadow ray in the opposite direction of the light orientation
-
-
 If any object intersects that ray, the point is fully shadowed
-
-
 Otherwise, fully lit
-
-
 PointLight::distanceAttenuation
 Computes distance from point to light
-
-
 Applies quadratic attenuation: 1 / (1 + c * d²)
-
-
 Clamped so the light never gets brighter than 1
-
-
 PointLight::shadowAttenuation
 Shoots a shadow ray toward the point light
-
-
 If something blocks the ray before reaching the light distance, the point is shadowed
-
-
 Otherwise, fully lit
 
-
-————————————
- cubeMap.cpp
+cubeMap.cpp
 CubeMap::getColor(ray)
 This samples the environment cube map when a ray misses all geometry.
 Steps:
 Normalize ray direction
-
-
 Determine which cube face (+X, -X, +Y, -Y, +Z, -Z) the ray hits based on the dominant direction component
-
-
 Compute (u, v) coordinates for that face
-
-
 Map from [-1,1] to [0,1]
-
-
 Clamp UVs for safety
-
-
 Sample the corresponding TextureMap using getMappedValue()
-
-
 This is what replaces the background when cube mapping is enabled.
-————————————
- trimesh.cpp
+
+trimesh.cpp
 TrimeshFace::intersectLocal(ray, isect)
 This is the ray–triangle intersection implementation.
 Algorithm used:
 Möller–Trumbore algorithm
-
-
 What it computes:
 Whether the ray intersects the triangle
-
-
 Intersection distance t
-
-
 Barycentric coordinates (u, v, w)
-
-
 If a valid hit:
 Sets intersection distance
-
-
 Sets the hit object
-
-
 Computes surface normal:
-
-
 If per-vertex normals exist, interpolate them using barycentric weights (Phong interpolation)
-
-
 Otherwise use the face normal
-
-
 Interpolates UV coordinates if present
-
-
 Handles vertex colors:
-
-
 If vertex colors exist, interpolate color and override the diffuse material color
-
-
 Otherwise use the parent mesh’s material
-
-
 This is what allows triangle meshes like the dragon to render correctly.
 Trimesh::intersectLocal
 Loops over all faces in the mesh and keeps the closest intersection.
