@@ -80,28 +80,3 @@ Map from [-1,1] to [0,1]
 Clamp UVs for safety
 Sample the corresponding TextureMap using getMappedValue()
 This is what replaces the background when cube mapping is enabled.
-
-trimesh.cpp
-TrimeshFace::intersectLocal(ray, isect)
-This is the ray–triangle intersection implementation.
-Algorithm used:
-Möller–Trumbore algorithm
-What it computes:
-Whether the ray intersects the triangle
-Intersection distance t
-Barycentric coordinates (u, v, w)
-If a valid hit:
-Sets intersection distance
-Sets the hit object
-Computes surface normal:
-If per-vertex normals exist, interpolate them using barycentric weights (Phong interpolation)
-Otherwise use the face normal
-Interpolates UV coordinates if present
-Handles vertex colors:
-If vertex colors exist, interpolate color and override the diffuse material color
-Otherwise use the parent mesh’s material
-This is what allows triangle meshes like the dragon to render correctly.
-Trimesh::intersectLocal
-Loops over all faces in the mesh and keeps the closest intersection.
-generateNormals()
-Computes per-vertex normals by averaging adjacent face normals. This enables smooth shading on meshes.
