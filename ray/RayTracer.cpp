@@ -1,7 +1,7 @@
 // The main ray tracer.
 
 #pragma warning(disable : 4786)
-
+#include <limits>
 #include "RayTracer.h"
 #include "scene/light.h"
 #include "scene/material.h"
@@ -77,20 +77,21 @@ glm::dvec3 RayTracer::traceRay(ray &r, const glm::dvec3 &thresh, int depth,
     isect i;
     glm::dvec3 colorC(0.0);
 
-#if VERBOSE
-    std::cerr << "== current depth: " << depth << std::endl;
-#endif
 
     if (scene->intersect(r, i)) {
+        t = i.getT();
         const Material &m = i.getMaterial();
 
         // ---- Local Phong shading ----
         colorC = m.shade(scene.get(), r, i);
-
         // Stop recursion
-        if (depth <= 0) {
-            return colorC;
-        }
+        if (depth <= 0 ||
+          (thresh[0] < this->thresh &&
+          thresh[1] < this->thresh &&
+          thresh[2] < this->thresh)) {
+          return colorC;
+}
+
 
         glm::dvec3 P = r.at(i.getT());
         glm::dvec3 N = glm::normalize(i.getN());
@@ -162,12 +163,12 @@ glm::dvec3 RayTracer::traceRay(ray &r, const glm::dvec3 &thresh, int depth,
             }
         }
 
-#if VERBOSE
-        std::cerr << "== depth: " << depth + 1 << " done, returning: "
-                  << colorC << std::endl;
-#endif
         return colorC;
     } else {
+        if (traceUI->cubeMap()) {
+          return traceUI->getCubeMap()->getColor(r);
+        }
+
         // ==================================================
         // No intersection: ray goes to infinity
         // ==================================================
@@ -180,11 +181,11 @@ glm::dvec3 RayTracer::traceRay(ray &r, const glm::dvec3 &thresh, int depth,
         
     // DEBUG BACKGROUND (sky gradient)
     glm::dvec3 D = glm::normalize(r.getDirection());
-    double t = 0.5 * (D.y + 1.0);
-
+    t = std::numeric_limits<double>::infinity();
+    double blend = 0.5 * (D.y + 1.0);
     // Blue → white gradient
-    colorC = (1.0 - t) * glm::dvec3(1.0, 1.0, 1.0)
-           + t * glm::dvec3(0.4, 0.7, 1.0);
+    colorC = (1.0 - blend) * glm::dvec3(1.0, 1.0, 1.0)
+       + blend * glm::dvec3(0.4, 0.7, 1.0);
 
     }
     return colorC;
