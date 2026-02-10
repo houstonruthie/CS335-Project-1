@@ -88,27 +88,55 @@ TextureMap::TextureMap(string filename) {
 }
 
 glm::dvec3 TextureMap::getMappedValue(const glm::dvec2 &coord) const {
-  // YOUR CODE HERE
-  //
-  // In order to add texture mapping support to the
-  // raytracer, you need to implement this function.
-  // What this function should do is convert from
-  // parametric space which is the unit square
-  // [0, 1] x [0, 1] in 2-space to bitmap coordinates,
-  // and use these to perform bilinear interpolation
-  // of the values.
+    if (width == 0 || height == 0) {
+        return glm::dvec3(1.0); // safety fallback
+    }
 
-  return glm::dvec3(1, 1, 1);
+    // Clamp UVs
+    double u = glm::clamp(coord.x, 0.0, 1.0);
+    double v = glm::clamp(coord.y, 0.0, 1.0);
+
+    // Convert to image space
+    double x = u * (width  - 1);
+    double y = (1.0 - v) * (height - 1); // flip V (image origin is top-left)
+
+    int x0 = static_cast<int>(std::floor(x));
+    int y0 = static_cast<int>(std::floor(y));
+    int x1 = x0 + 1;
+    int y1 = y0 + 1;
+
+    double sx = x - x0;
+    double sy = y - y0;
+
+    // Sample four surrounding pixels
+    glm::dvec3 c00 = getPixelAt(x0, y0);
+    glm::dvec3 c10 = getPixelAt(x1, y0);
+    glm::dvec3 c01 = getPixelAt(x0, y1);
+    glm::dvec3 c11 = getPixelAt(x1, y1);
+
+    // Interpolate in x
+    glm::dvec3 c0 = (1.0 - sx) * c00 + sx * c10;
+    glm::dvec3 c1 = (1.0 - sx) * c01 + sx * c11;
+
+    // Interpolate in y
+    return (1.0 - sy) * c0 + sy * c1;
 }
+
 
 glm::dvec3 TextureMap::getPixelAt(int x, int y) const {
-  // YOUR CODE HERE
-  //
-  // In order to add texture mapping support to the
-  // raytracer, you need to implement this function.
+    // Clamp to image bounds
+    x = std::max(0, std::min(x, width - 1));
+    y = std::max(0, std::min(y, height - 1));
 
-  return glm::dvec3(1, 1, 1);
+    int idx = (y * width + x) * 3;
+
+    double r = data[idx]     / 255.0;
+    double g = data[idx + 1] / 255.0;
+    double b = data[idx + 2] / 255.0;
+
+    return glm::dvec3(r, g, b);
 }
+
 
 glm::dvec3 MaterialParameter::value(const isect &is) const {
   if (0 != _textureMap)
