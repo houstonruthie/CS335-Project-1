@@ -1,3 +1,0 @@
-/Users/ruthiehouston/raytracer/ray/build/CMakeFiles/ray.dir
-/Users/ruthiehouston/raytracer/ray/build/CMakeFiles/edit_cache.dir
-/Users/ruthiehouston/raytracer/ray/build/CMakeFiles/rebuild_cache.dir

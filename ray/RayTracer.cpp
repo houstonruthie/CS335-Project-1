@@ -187,6 +187,7 @@ glm::dvec3 RayTracer::traceRay(ray &r, const glm::dvec3 &thresh, int depth,
            + t * glm::dvec3(0.4, 0.7, 1.0);
 
     }
+    return colorC;
 }
 
 
@@ -319,35 +320,54 @@ void RayTracer::traceImage(int w, int h) {
       tracePixel(i, j);
     }
   }
+  if (samples > 0) {
+    aaImage();
+}
 }
 
 
 int RayTracer::aaImage() {
-  // YOUR CODE HERE
-  // FIXME: Implement Anti-aliasing here
-  //
-  // TIP: samples and aaThresh have been synchronized with TraceUI by
-  //      RayTracer::traceSetup() function
-  return 0;
+    // Check if the required parameters are initialized
+    if (samples <= 0) {
+        return 0; // No samples means no anti-aliasing
+    }
+
+    // Loop through each pixel
+    for (int j = 0; j < buffer_height; ++j) {
+        for (int i = 0; i < buffer_width; ++i) {
+            glm::dvec3 color(0.0); // Initialize cumulative color for the pixel
+
+            // Loop for each sample within the pixel
+            for (int s = 0; s < samples; ++s) {
+                // Generate a random offset for sub-pixel sampling
+                double xOffset = ((double)rand() / RAND_MAX - 0.5) * 1.0;
+                double yOffset = ((double)rand() / RAND_MAX - 0.5) * 1.0;
+
+
+                // Compute the color for the ray with the offset
+                glm::dvec3 sampleColor = trace((i + xOffset) / buffer_width, (j + yOffset) / buffer_height);
+                color += sampleColor; // Accumulate sample color
+            }
+
+            // Average the color by the number of samples
+            color /= static_cast<double>(samples);
+
+            // Store the averaged color into the pixel buffer
+            setPixel(i, j, color);
+        }
+    }
+
+    return 1; // Indicate that anti-aliasing was performed
 }
 
 bool RayTracer::checkRender() {
-  // YOUR CODE HERE
-  // FIXME: Return true if tracing is done.
-  //        This is a helper routine for GUI.
-  //
-  // TIPS: Introduce an array to track the status of each worker thread.
-  //       This array is maintained by the worker threads.
+
   return true;
 }
 
 void RayTracer::waitRender() {
-  // YOUR CODE HERE
-  // FIXME: Wait until the rendering process is done.
-  //        This function is essential if you are using an asynchronous
-  //        traceImage implementation.
-  //
-  // TIPS: Join all worker threads here.
+
+  return;
 }
 
 

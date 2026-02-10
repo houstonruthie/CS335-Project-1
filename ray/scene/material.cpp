@@ -30,6 +30,7 @@ glm::dvec3 Material::shade(Scene *scene, const ray &r, const isect &i) const {
     // Direction to light
     glm::dvec3 P = r.at(i.getT());
     glm::dvec3 L = glm::normalize(pLight->getDirection(P));
+    const double eps = 1e-6;
 
 
     // Light color
@@ -47,13 +48,22 @@ double RdotV = std::max(0.0, glm::dot(R, V));
 
 // Compute components
 glm::dvec3 diffuse =
-    kd(i) * lightColor * NdotL * atten;
+    kd(i) * lightColor * NdotL;
 
 glm::dvec3 specular =
-    ks(i) * lightColor * pow(RdotV, shininess(i)) * atten;
+    ks(i) * lightColor * pow(RdotV, shininess(i));
+
+// Construct shadow ray from surface point toward light
+ray shadowRay(
+    P + eps * N,   // origin (offset to avoid self-intersection)
+    L,             // direction toward light
+    glm::dvec3(1.0),
+    ray::SHADOW
+);
 
 // Shadow attenuation
-glm::dvec3 shadow = pLight->shadowAttenuation(r, P);
+glm::dvec3 shadow = pLight->shadowAttenuation(shadowRay, P);
+
 
 // Accumulate
 color += atten * shadow * (diffuse + specular);
