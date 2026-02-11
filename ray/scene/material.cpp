@@ -98,7 +98,7 @@ glm::dvec3 TextureMap::getMappedValue(const glm::dvec2 &coord) const {
 
     // Convert to image space
     double x = u * (width  - 1);
-    double y = (1.0 - v) * (height - 1); // flip V (image origin is top-left)
+    double y = v * (height - 1); // flip V (image origin is top-left)
 
     int x0 = static_cast<int>(std::floor(x));
     int y0 = static_cast<int>(std::floor(y));

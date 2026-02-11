@@ -169,14 +169,6 @@ glm::dvec3 RayTracer::traceRay(ray &r, const glm::dvec3 &thresh, int depth,
           return traceUI->getCubeMap()->getColor(r);
         }
 
-        // ==================================================
-        // No intersection: ray goes to infinity
-        // ==================================================
-        // FIXME: Add CubeMap support here.
-        // TIPS:
-        //   - CubeMap object can be fetched from:
-        //       traceUI->getCubeMap()
-        //   - Check traceUI->cubeMap() to see if it is enabled
 
         
     // DEBUG BACKGROUND (sky gradient)
@@ -321,9 +313,6 @@ void RayTracer::traceImage(int w, int h) {
       tracePixel(i, j);
     }
   }
-  if (samples > 0) {
-    aaImage();
-}
 }
 
 

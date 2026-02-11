@@ -86,8 +86,6 @@ bool TrimeshFace::intersectLocal(ray &r, isect &i) const {
   const glm::dvec3 &C = parent->vertices[ids[2]];
 
   // Möller–Trumbore intersection
-  const double EPS = 1e-9;
-
   glm::dvec3 e1 = B - A;
   glm::dvec3 e2 = C - A;
 
@@ -95,7 +93,7 @@ bool TrimeshFace::intersectLocal(ray &r, isect &i) const {
   double det = glm::dot(e1, pvec);
 
   // Parallel (or nearly parallel)
-  if (std::abs(det) < EPS) return false;
+  if (std::abs(det) < RAY_EPSILON) return false;
 
   double invDet = 1.0 / det;
 
@@ -110,10 +108,7 @@ bool TrimeshFace::intersectLocal(ray &r, isect &i) const {
   double tHit = glm::dot(e2, qvec) * invDet;
 
   // Reject hits behind the ray start or too close
-  if (tHit <= EPS) return false;
-
-  // If caller already has a closer hit, reject
-  if (tHit >= i.getT()) return false;
+  if (tHit <= RAY_EPSILON) return false;
 
   // Barycentric weights
   double w = 1.0 - u - v; // weight for A
@@ -128,9 +123,9 @@ bool TrimeshFace::intersectLocal(ray &r, isect &i) const {
     const glm::dvec3 &nA = parent->normals[ids[0]];
     const glm::dvec3 &nB = parent->normals[ids[1]];
     const glm::dvec3 &nC = parent->normals[ids[2]];
-    N = glm::normalize(w * nA + u * nB + v * nC);
+    N = w * nA + u * nB + v * nC;
   } else {
-    N = normal;
+    N = glm::normalize(glm::cross(e1, e2));
   }
   i.setN(N);
 
@@ -139,6 +134,7 @@ bool TrimeshFace::intersectLocal(ray &r, isect &i) const {
     const glm::dvec2 &uvA = parent->uvCoords[ids[0]];
     const glm::dvec2 &uvB = parent->uvCoords[ids[1]];
     const glm::dvec2 &uvC = parent->uvCoords[ids[2]];
+
     glm::dvec2 uv = w * uvA + u * uvB + v * uvC;
     i.setUVCoordinates(uv);
 
@@ -190,4 +186,3 @@ void Trimesh::generateNormals() {
 
   vertNorms = true;
 }
-
